@@ -1,8 +1,12 @@
 // Tiny backup endpoint for JP Space.
 // POST  -> saves the JSON body as the latest backup
 // GET   -> returns the latest saved backup
-// Both require a header "x-backup-secret" that matches the BACKUP_SECRET
-// environment variable set in the Vercel project settings.
+//
+// Password protection is OPTIONAL: if you set a BACKUP_SECRET environment
+// variable in the Vercel project settings, requests must send a matching
+// "x-backup-secret" header. If BACKUP_SECRET is left unset, anyone who has
+// this project's URL can read or overwrite the backup (fine for a quick
+// personal setup, just don't share the link publicly).
 
 import { put, list } from '@vercel/blob';
 
@@ -16,7 +20,7 @@ function setCors(res) {
 
 function isAuthorized(req) {
   const secret = process.env.BACKUP_SECRET;
-  if (!secret) return false; // must be configured in Vercel project settings
+  if (!secret) return true; // no secret configured -> auth check is skipped
   const provided = req.headers['x-backup-secret'];
   return typeof provided === 'string' && provided === secret;
 }
